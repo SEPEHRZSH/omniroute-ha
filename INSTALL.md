@@ -8,15 +8,26 @@ Ubuntu 22.04, MongoDB **8.0.16**, and Redis **7.2.17**. Qualify other patch
 versions against the checks in section 5. Ubuntu 24.04 package installation
 and the two-VM procedure still require validation on the target hosts.
 
-Use an unprivileged account for commands that do not specify `sudo`. Extract
-into an empty directory whose path contains no spaces. If the checksum file
-was supplied, run `sha256sum -c OmniRoute-HA-v3.8.53.zip.sha256` before extraction.
+Use an unprivileged account for commands that do not specify `sudo`. Choose an
+installation path without spaces.
 
 ## 1. Source, tools and build on each application server
 
+Clone this repository (skip this step if you already have a checkout):
+
 ```sh
-unzip OmniRoute-HA-v3.8.53.zip
-cd OmniRoute-HA
+git clone https://github.com/SEPEHRZSH/omniroute-ha.git
+cd omniroute-ha
+```
+
+If using a separately supplied `OmniRoute-HA-v3.8.53.zip` distribution instead,
+verify its checksum with `sha256sum -c OmniRoute-HA-v3.8.53.zip.sha256` if the
+checksum file was supplied, then extract it into an empty directory and enter
+its project root. Do not perform both installation methods.
+
+From the project root, install the pinned runtime:
+
+```sh
 # Install the pinned runtime in the project directory.
 mkdir -p .work/runtime
 cd .work/runtime
