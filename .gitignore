@@ -1,0 +1,26 @@
+# Immutable external source checkout
+/upstream/
+# Secrets and runtime state
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-*
+*.db
+*.log
+node_modules/
+.next/
+coverage/
+*.tar.gz
+*.zip
+/.work/
+/tests/nextApp/.next/
+/deploy/mongo-test-data/
+/deploy/host.env
+/deploy/host.env.*
+!/deploy/host.env.example
+*.bson
+*.partial
+
+# Private independent-host acceptance and deployment environments
+/deploy/*.env

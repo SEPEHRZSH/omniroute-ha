@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
+fail() { printf '%s\n' "$*" >&2; exit 1; }
+pin=191dce8d534ceb56c28a08e71381284a9a87838f
+tag=v3.8.53
+remote=https://github.com/cheaper-inference/OmniRoute.git
+export GIT_OPTIONAL_LOCKS=0
+case "${1:-}" in
+  source)
+    shift
+    [[ $# -eq 0 || ( $# -eq 2 && "$1" == --from ) ]] || fail 'Use: scripts/ha source [--from LOCAL_GIT_CHECKOUT]'
+    if [[ -e upstream/omniroute || -L upstream/omniroute ]]; then
+      [[ $# -eq 0 ]] || fail 'Checkout already exists. Verify or move it yourself.'
+      exec bash scripts/verify-upstream.sh
+    fi
+    mkdir -p upstream
+    stage=$(mktemp -d upstream/.fetch.XXXXXXXX)
+    # Use a standalone checkout, never Git alternates or a symlink to a developer tree.
+    git init -q "$stage"
+    git -C "$stage" fetch --depth=1 --no-tags "${2:-$remote}" "refs/tags/$tag:refs/tags/$tag"
+    [[ "$(git -C "$stage" rev-parse "$tag^{commit}")" == "$pin" ]] ||
+      fail "Unexpected upstream commit. Preserved candidate at $stage for inspection."
+    git -C "$stage" -c advice.detachedHead=false checkout --detach -q "$pin"
+    mv -T --no-clobber "$stage" upstream/omniroute
+    [[ ! -e "$stage" ]] || fail "Checkout appeared concurrently. Preserved candidate at $stage."
+    exec bash scripts/verify-upstream.sh
+    ;;
+esac
+node_bin="${HA_NODE:-node}"
+[[ "$("$node_bin" --version 2>/dev/null)" == v22.22.2 ]] ||
+  fail 'Node.js v22.22.2 is required. Set PATH or HA_NODE as described in INSTALL.md.'
+[[ "$(uname -s):$(uname -m)" == Linux:x86_64 ]] || fail 'This release targets Linux x86-64.'
+export PATH="$(dirname -- "$(command -v "$node_bin")"):$PATH"
+case "${1:-}" in
+  deps)
+    shift
+    mkdir -p .work/npm-cache .work/npm-tmp
+    cache="${HA_NPM_CACHE:-$PWD/.work/npm-cache}"
+    exec env PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 TMPDIR="$PWD/.work/npm-tmp" npm ci --legacy-peer-deps --cache "$cache" --no-audit --no-fund "$@"
+    ;;
+  build)
+    shift
+    mkdir -p .work
+    exec env LIBC=glibc NODE_OPTIONS=--max-old-space-size=6144 "$node_bin" scripts/build-backend.mjs "$@"
+    ;;
+  provision) shift; exec "$node_bin" scripts/provision.mjs "$@" ;;
+  prepare|check|preflight|start|status|topology|service)
+    exec "$node_bin" scripts/host.mjs "$@" ;;
+  render) shift; exec "$node_bin" scripts/render-deploy.mjs "$@" ;;
+  acceptance) shift; exec "$node_bin" scripts/accept-hosts.mjs "$@" ;;
+  test) shift; exec env LIBC=glibc "$node_bin" scripts/test.mjs "$@" ;;
+  *) fail 'Use scripts/ha source|deps|build|provision|prepare|check|preflight|start|status|topology|service|render|acceptance|test' ;;
+esac

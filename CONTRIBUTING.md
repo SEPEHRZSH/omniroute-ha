@@ -8,7 +8,7 @@ Include the OmniRoute and Node.js versions, operating system, MongoDB/Redis topo
 
 ## Submitting changes
 
-Fork the repository, create a focused branch, and open a pull request explaining the behavior change and the tests performed. Preserve the pinned upstream checkout, keep changes scoped, and add regression coverage for behavioral changes. Run the relevant checks described in INSTALL.md once the source import is complete. Do not claim support for untested SQL operations or production topologies.
+Fork the repository, create a focused branch, and open a pull request explaining the behavior change and the tests performed. Preserve the pinned upstream checkout, keep changes scoped, and add regression coverage for behavioral changes. Run the relevant checks described in INSTALL.md. Do not claim support for untested SQL operations or production topologies.
 
 ## Security
 

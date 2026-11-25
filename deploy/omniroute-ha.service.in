@@ -1,0 +1,24 @@
+# Render @PROJECT@ and @SERVICE_USER@ separately on each staging host.
+[Unit]
+Description=OmniRoute MongoDB HA (experimental staging)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@SERVICE_USER@
+WorkingDirectory=@PROJECT@
+Environment=PATH=@PROJECT@/.work/runtime/node-v22.22.2-linux-x64/bin:/usr/bin:/bin
+EnvironmentFile=@PROJECT@/deploy/host.env
+ExecStart=@PROJECT@/.work/runtime/node-v22.22.2-linux-x64/bin/node @PROJECT@/scripts/host.mjs start --env @PROJECT@/deploy/host.env
+Restart=always
+RestartSec=3
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=@PROJECT@/.work
+
+[Install]
+WantedBy=multi-user.target
